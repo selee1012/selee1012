@@ -36,6 +36,10 @@
 * [GlobalStep](https://github.com/selee1012/fullback-backend-showcase): 외국인 여행자를 위한 다국어 위치 기반 산책로 가이드 서비스 (2026.04 - 2026.06)
 * [기술 트렌드 자동 분류·분석 시스템](https://github.com/selee1012/BDProject): Kafka·Spark 기반 개발 기술 트렌드 수집 및 연관 기술 분석 시스템 (2026.06)
 
+### GitHub Activity
+
+![GitHub Stats](https://github-stats-extended.vercel.app/api?username=selee1012&show_icons=true&include_all_commits=true&show=reviews,prs_merged,prs_reviewed&hide_rank=true)
+
 ### Contact
 
 * GitHub: [github.com/selee1012](https://github.com/selee1012)
