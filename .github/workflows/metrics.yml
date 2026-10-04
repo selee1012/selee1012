@@ -21,10 +21,27 @@ jobs:
           template: classic
           base: ""
 
-          repositories_affiliations: owner, collaborator, organization_member
+          # 내 개인 저장소 + collaborator 저장소
+          repositories: 30
+          repositories_affiliations: owner, collaborator
+
+          # 내 커밋 식별
           commits_authoring: selee1012, dltjddms1012@gmail.com
 
+          # 언어 분석
           plugin_languages: yes
           plugin_languages_indepth: yes
-          plugin_languages_ignored: html, css
           plugin_languages_details: percentage
+          plugin_languages_ignored: html, css
+
+          # Organization 저장소는 직접 지정
+          plugin_languages_indepth_custom: >
+            RuleUp-ASM/Backend,
+            RuleUp-ASM/RandingPage,
+            RuleUp-ASM/AdminPage,
+            RuleUp-ASM/PrivacyPolicyPage,
+            asm-17th-ai55/ai55,
+            capstone-fullstack/global-step-be
+
+          plugin_languages_analysis_timeout: 60
+          plugin_languages_analysis_timeout_repositories: 15
