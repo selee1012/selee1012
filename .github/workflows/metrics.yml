@@ -1,4 +1,4 @@
-name: GitHub Metrics
+name: GitHub Language Stats
 
 on:
   schedule:
@@ -6,42 +6,22 @@ on:
   workflow_dispatch:
 
 jobs:
-  github-metrics:
+  build:
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
 
     steps:
-      - uses: lowlighter/metrics@latest
+      - uses: actions/checkout@v4
+
+      - uses: vn7n24fzkq/github-profile-summary-cards@release
+        env:
+          GITHUB_TOKEN: ${{ secrets.METRICS_TOKEN }}
         with:
-          token: ${{ secrets.METRICS_TOKEN }}
-          user: selee1012
-
-          filename: github-metrics.svg
-          template: classic
-          base: ""
-
-          # 내 개인 저장소 + collaborator 저장소
-          repositories: 30
-          repositories_affiliations: owner, collaborator
-
-          # 내 커밋 식별
-          commits_authoring: selee1012, dltjddms1012@gmail.com
-
-          # 언어 분석
-          plugin_languages: yes
-          plugin_languages_indepth: yes
-          plugin_languages_details: percentage
-          plugin_languages_ignored: html, css
-
-          # Organization 저장소는 직접 지정
-          plugin_languages_indepth_custom: >
-            RuleUp-ASM/Backend,
-            RuleUp-ASM/RandingPage,
-            RuleUp-ASM/AdminPage,
-            RuleUp-ASM/PrivacyPolicyPage,
-            asm-17th-ai55/ai55,
-            capstone-fullstack/global-step-be
-
-          plugin_languages_analysis_timeout: 60
-          plugin_languages_analysis_timeout_repositories: 15
+          USERNAME: selee1012
+          BRANCH_NAME: main
+          UTC_OFFSET: 9
+          EXCLUDE: "html,css"
+          AUTO_PUSH: true
+          THEME: "default"
