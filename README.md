@@ -24,6 +24,10 @@
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge\&logo=python\&logoColor=white)
 ![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=for-the-badge\&logo=pytorch\&logoColor=white)
 
+### Most Used Languages
+
+![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=selee1012&layout=compact&langs_count=8&hide_border=true)
+
 ### Certificates
 
 * OPIc IH | ACTFL | 2025.04
