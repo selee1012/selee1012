@@ -26,7 +26,7 @@
 
 ### Most Used Languages
 
-![Most Commit Language](./profile-summary-card-output/default/2-most-commit-language.svg)
+![Most Used Languages](./language-stats.svg)
 
 ### Certificates
 
