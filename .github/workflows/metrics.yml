@@ -2,26 +2,511 @@ name: GitHub Language Stats
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 0 * * *" # 매일 09:00 KST
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+concurrency:
+  group: github-language-stats
+  cancel-in-progress: true
+
 jobs:
-  build:
+  generate-language-stats:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: write
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: vn7n24fzkq/github-profile-summary-cards@release
+      - name: Generate language stats
         env:
-          GITHUB_TOKEN: ${{ secrets.METRICS_TOKEN }}
-        with:
-          USERNAME: selee1012
-          BRANCH_NAME: main
-          UTC_OFFSET: 9
-          EXCLUDE: "html,css"
-          AUTO_PUSH: true
-          THEME: "default"
+          GH_TOKEN: ${{ secrets.METRICS_TOKEN }}
+          GITHUB_USERNAME: selee1012
+
+        run: |
+          python3 <<'PY'
+          import os
+          import json
+          import html
+          import urllib.request
+          import urllib.error
+          from datetime import datetime, timezone
+
+          TOKEN = os.environ["GH_TOKEN"]
+          USERNAME = os.environ["GITHUB_USERNAME"]
+
+          # 통계에서 제외할 언어
+          EXCLUDED_LANGUAGES = {
+              "html",
+              "css",
+          }
+
+          # 0이면 모든 언어 표시.
+          # 예: 15로 바꾸면 상위 15개만 표시.
+          MAX_LANGUAGES = 0
+
+          OUTPUT_FILE = "language-stats.svg"
+
+          API_URL = "https://api.github.com/graphql"
+
+          def graphql(query, variables):
+              payload = json.dumps({
+                  "query": query,
+                  "variables": variables
+              }).encode("utf-8")
+
+              req = urllib.request.Request(
+                  API_URL,
+                  data=payload,
+                  headers={
+                      "Authorization": f"Bearer {TOKEN}",
+                      "Content-Type": "application/json",
+                      "User-Agent": "github-language-stats"
+                  },
+                  method="POST"
+              )
+
+              try:
+                  with urllib.request.urlopen(req) as response:
+                      result = json.loads(response.read().decode("utf-8"))
+              except urllib.error.HTTPError as e:
+                  body = e.read().decode("utf-8")
+                  raise RuntimeError(
+                      f"GitHub API HTTP {e.code}: {body}"
+                  )
+
+              if result.get("errors"):
+                  raise RuntimeError(
+                      "GitHub GraphQL error: "
+                      + json.dumps(result["errors"], ensure_ascii=False)
+                  )
+
+              return result["data"]
+
+          def get_contribution_years():
+              query = """
+              query($login: String!) {
+                user(login: $login) {
+                  contributionsCollection {
+                    contributionYears
+                  }
+                }
+              }
+              """
+
+              data = graphql(query, {"login": USERNAME})
+
+              user = data.get("user")
+              if not user:
+                  raise RuntimeError(f"GitHub user not found: {USERNAME}")
+
+              return user["contributionsCollection"]["contributionYears"]
+
+          def fetch_commit_contributions(start, end):
+              query = """
+              query(
+                $login: String!,
+                $from: DateTime!,
+                $to: DateTime!
+              ) {
+                user(login: $login) {
+                  contributionsCollection(
+                    from: $from,
+                    to: $to
+                  ) {
+                    commitContributionsByRepository(
+                      maxRepositories: 100
+                    ) {
+                      repository {
+                        nameWithOwner
+                        primaryLanguage {
+                          name
+                          color
+                        }
+                      }
+                      contributions {
+                        totalCount
+                      }
+                    }
+                  }
+                }
+              }
+              """
+
+              data = graphql(
+                  query,
+                  {
+                      "login": USERNAME,
+                      "from": start,
+                      "to": end,
+                  },
+              )
+
+              return (
+                  data["user"]
+                  ["contributionsCollection"]
+                  ["commitContributionsByRepository"]
+              )
+
+          def fetch_year(year):
+              now = datetime.now(timezone.utc)
+              current_year = now.year
+
+              start = f"{year}-01-01T00:00:00Z"
+
+              if year == current_year:
+                  end = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+              else:
+                  end = f"{year}-12-31T23:59:59Z"
+
+              try:
+                  return fetch_commit_contributions(start, end)
+
+              except RuntimeError as error:
+                  print(
+                      f"Full-year query failed for {year}. "
+                      f"Retrying in two periods."
+                  )
+                  print(error)
+
+                  first_half_end = f"{year}-06-30T23:59:59Z"
+                  second_half_start = f"{year}-07-01T00:00:00Z"
+
+                  first = fetch_commit_contributions(
+                      start,
+                      first_half_end
+                  )
+
+                  if year == current_year and now.month <= 6:
+                      return first
+
+                  second = fetch_commit_contributions(
+                      second_half_start,
+                      end
+                  )
+
+                  return first + second
+
+          def collect_language_stats():
+              years = get_contribution_years()
+
+              print("Contribution years:", years)
+
+              language_counts = {}
+              repository_counts = {}
+
+              for year in sorted(years):
+                  print(f"Fetching {year}...")
+
+                  nodes = fetch_year(year)
+
+                  for node in nodes:
+                      repo = node["repository"]
+                      language = repo.get("primaryLanguage")
+
+                      if not language:
+                          continue
+
+                      language_name = language["name"]
+
+                      if language_name.lower() in EXCLUDED_LANGUAGES:
+                          continue
+
+                      count = node["contributions"]["totalCount"]
+
+                      if count <= 0:
+                          continue
+
+                      language_counts.setdefault(
+                          language_name,
+                          {
+                              "count": 0,
+                              "color": language.get("color") or "#8b949e"
+                          }
+                      )
+
+                      language_counts[language_name]["count"] += count
+
+                      repo_name = repo["nameWithOwner"]
+                      repository_counts[repo_name] = (
+                          repository_counts.get(repo_name, 0) + count
+                      )
+
+              return language_counts, repository_counts
+
+          def pct_text(value):
+              if value > 0 and value < 0.1:
+                  return "<0.1%"
+              return f"{value:.1f}%"
+
+          def build_svg(stats):
+              items = sorted(
+                  stats.items(),
+                  key=lambda item: item[1]["count"],
+                  reverse=True
+              )
+
+              if MAX_LANGUAGES > 0:
+                  items = items[:MAX_LANGUAGES]
+
+              total = sum(
+                  value["count"]
+                  for _, value in items
+              )
+
+              if total == 0:
+                  width = 720
+                  height = 110
+
+                  return f"""<svg xmlns="http://www.w3.org/2000/svg"
+                    width="{width}"
+                    height="{height}"
+                    viewBox="0 0 {width} {height}">
+                    <style>
+                      .title {{
+                        font: 600 20px -apple-system,BlinkMacSystemFont,
+                        "Segoe UI",Helvetica,Arial,sans-serif;
+                        fill: #24292f;
+                      }}
+
+                      .text {{
+                        font: 14px -apple-system,BlinkMacSystemFont,
+                        "Segoe UI",Helvetica,Arial,sans-serif;
+                        fill: #57606a;
+                      }}
+
+                      @media (prefers-color-scheme: dark) {{
+                        .title {{ fill: #f0f6fc; }}
+                        .text {{ fill: #8b949e; }}
+                      }}
+                    </style>
+
+                    <text
+                      x="20"
+                      y="32"
+                      class="title">
+                      Most Used Languages
+                    </text>
+
+                    <text
+                      x="20"
+                      y="70"
+                      class="text">
+                      No commit data found.
+                    </text>
+                  </svg>
+                  """
+
+              ROW_HEIGHT = 32
+              HEADER_HEIGHT = 54
+              FOOTER_HEIGHT = 35
+
+              WIDTH = 760
+              HEIGHT = (
+                  HEADER_HEIGHT
+                  + ROW_HEIGHT * len(items)
+                  + FOOTER_HEIGHT
+              )
+
+              LABEL_X = 20
+              BAR_X = 165
+              BAR_MAX_WIDTH = 470
+              PERCENT_X = 735
+
+              rows = []
+
+              for index, (language, data) in enumerate(items):
+                  y = HEADER_HEIGHT + index * ROW_HEIGHT
+
+                  count = data["count"]
+                  color = data["color"]
+
+                  percentage = count / total * 100
+
+                  bar_width = max(
+                      2,
+                      BAR_MAX_WIDTH * (percentage / 100)
+                  )
+
+                  safe_language = html.escape(language)
+                  safe_color = html.escape(color)
+
+                  rows.append(
+                      f"""
+                      <text
+                        x="{LABEL_X}"
+                        y="{y + 20}"
+                        class="label">
+                        {safe_language}
+                      </text>
+
+                      <rect
+                        x="{BAR_X}"
+                        y="{y + 7}"
+                        width="{BAR_MAX_WIDTH}"
+                        height="16"
+                        rx="4"
+                        class="bar-bg"
+                      />
+
+                      <rect
+                        x="{BAR_X}"
+                        y="{y + 7}"
+                        width="{bar_width:.2f}"
+                        height="16"
+                        rx="4"
+                        fill="{safe_color}"
+                      />
+
+                      <text
+                        x="{PERCENT_X}"
+                        y="{y + 20}"
+                        text-anchor="end"
+                        class="percent">
+                        {html.escape(pct_text(percentage))}
+                      </text>
+                      """
+                  )
+
+              return f"""<svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="{WIDTH}"
+                height="{HEIGHT}"
+                viewBox="0 0 {WIDTH} {HEIGHT}">
+
+                <style>
+                  .title {{
+                    font: 600 20px -apple-system,BlinkMacSystemFont,
+                    "Segoe UI",Helvetica,Arial,sans-serif;
+                    fill: #24292f;
+                  }}
+
+                  .label {{
+                    font: 500 13px -apple-system,BlinkMacSystemFont,
+                    "Segoe UI",Helvetica,Arial,sans-serif;
+                    fill: #24292f;
+                  }}
+
+                  .percent {{
+                    font: 500 13px -apple-system,BlinkMacSystemFont,
+                    "Segoe UI",Helvetica,Arial,sans-serif;
+                    fill: #57606a;
+                  }}
+
+                  .footer {{
+                    font: 11px -apple-system,BlinkMacSystemFont,
+                    "Segoe UI",Helvetica,Arial,sans-serif;
+                    fill: #8c959f;
+                  }}
+
+                  .bar-bg {{
+                    fill: #eaeef2;
+                  }}
+
+                  @media (prefers-color-scheme: dark) {{
+                    .title,
+                    .label {{
+                      fill: #f0f6fc;
+                    }}
+
+                    .percent {{
+                      fill: #c9d1d9;
+                    }}
+
+                    .footer {{
+                      fill: #8b949e;
+                    }}
+
+                    .bar-bg {{
+                      fill: #30363d;
+                    }}
+                  }}
+                </style>
+
+                <text
+                  x="20"
+                  y="30"
+                  class="title">
+                  Most Used Languages
+                </text>
+
+                {''.join(rows)}
+
+                <text
+                  x="20"
+                  y="{HEIGHT - 10}"
+                  class="footer">
+                  Based on GitHub commit contributions · HTML/CSS excluded
+                </text>
+
+              </svg>
+              """
+
+          language_stats, repo_stats = collect_language_stats()
+
+          print()
+          print("Language statistics:")
+          print("--------------------")
+
+          total_commits = sum(
+              data["count"]
+              for data in language_stats.values()
+          )
+
+          for language, data in sorted(
+              language_stats.items(),
+              key=lambda x: x[1]["count"],
+              reverse=True
+          ):
+              percentage = (
+                  data["count"] / total_commits * 100
+                  if total_commits
+                  else 0
+              )
+
+              print(
+                  f"{language:20} "
+                  f"{data['count']:6} commits "
+                  f"{percentage:6.2f}%"
+              )
+
+          print()
+          print("Repositories included:")
+          print("----------------------")
+
+          for repo, count in sorted(
+              repo_stats.items(),
+              key=lambda x: x[1],
+              reverse=True
+          ):
+              print(f"{repo}: {count}")
+
+          svg = build_svg(language_stats)
+
+          with open(
+              OUTPUT_FILE,
+              "w",
+              encoding="utf-8"
+          ) as file:
+              file.write(svg)
+
+          print()
+          print(f"Generated: {OUTPUT_FILE}")
+          PY
+
+      - name: Commit generated SVG
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add language-stats.svg
+
+          if git diff --cached --quiet; then
+            echo "No changes in language stats."
+            exit 0
+          fi
+
+          git commit -m "chore: update language statistics"
+          git push
