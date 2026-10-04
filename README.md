@@ -26,7 +26,7 @@
 
 ### Most Used Languages
 
-![Languages](./github-metrics.svg)
+![Most Commit Language](./profile-summary-card-output/default/2-most-commit-language.svg)
 
 ### Certificates
 
