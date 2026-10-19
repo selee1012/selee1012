@@ -242,21 +242,30 @@ jobs:
               return f"{value:.1f}%"
 
           def build_svg(stats):
+              # 비율은 필터링 전 전체 커밋 수를 기준으로 계산한다.
+              total = sum(
+                  value["count"]
+                  for value in stats.values()
+              )
+
               items = sorted(
                   stats.items(),
                   key=lambda item: item[1]["count"],
                   reverse=True
               )
 
+              # 0.1% 이하인 언어 제외 (경계값도 정확히 제외).
+              # count / total > 0.001 을 정수 연산으로 비교한다.
+              items = [
+                  (language, data)
+                  for language, data in items
+                  if total > 0 and data["count"] * 1000 > total
+              ]
+
               if MAX_LANGUAGES > 0:
                   items = items[:MAX_LANGUAGES]
 
-              total = sum(
-                  value["count"]
-                  for _, value in items
-              )
-
-              if total == 0:
+              if not items:
                   width = 720
                   height = 110
 
