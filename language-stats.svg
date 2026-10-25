@@ -1,8 +1,8 @@
 <svg
       xmlns="http://www.w3.org/2000/svg"
       width="760"
-      height="249"
-      viewBox="0 0 760 249">
+      height="281"
+      viewBox="0 0 760 281">
 
       <style>
         .title {
@@ -80,7 +80,7 @@
             <rect
               x="165"
               y="61"
-              width="441.53"
+              width="439.15"
               height="16"
               rx="4"
               fill="#b07219"
@@ -91,7 +91,7 @@
               y="74"
               text-anchor="end"
               class="percent">
-              93.9%
+              93.4%
             </text>
             
             <text
@@ -113,7 +113,7 @@
             <rect
               x="165"
               y="93"
-              width="9.77"
+              width="9.72"
               height="16"
               rx="4"
               fill="#DA5B0B"
@@ -146,7 +146,7 @@
             <rect
               x="165"
               y="125"
-              width="9.35"
+              width="9.30"
               height="16"
               rx="4"
               fill="#3572A5"
@@ -179,7 +179,7 @@
             <rect
               x="165"
               y="157"
-              width="8.07"
+              width="8.03"
               height="16"
               rx="4"
               fill="#3178c6"
@@ -197,7 +197,7 @@
               x="20"
               y="202"
               class="label">
-              JavaScript
+              Kotlin
             </text>
 
             <rect
@@ -212,6 +212,39 @@
             <rect
               x="165"
               y="189"
+              width="2.54"
+              height="16"
+              rx="4"
+              fill="#A97BFF"
+            />
+
+            <text
+              x="735"
+              y="202"
+              text-anchor="end"
+              class="percent">
+              0.5%
+            </text>
+            
+            <text
+              x="20"
+              y="234"
+              class="label">
+              JavaScript
+            </text>
+
+            <rect
+              x="165"
+              y="221"
+              width="470"
+              height="16"
+              rx="4"
+              class="bar-bg"
+            />
+
+            <rect
+              x="165"
+              y="221"
               width="2.00"
               height="16"
               rx="4"
@@ -220,7 +253,7 @@
 
             <text
               x="735"
-              y="202"
+              y="234"
               text-anchor="end"
               class="percent">
               0.2%
@@ -229,7 +262,7 @@
 
       <text
         x="20"
-        y="239"
+        y="271"
         class="footer">
         Based on GitHub commit contributions · HTML/CSS excluded
       </text>
