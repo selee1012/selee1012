@@ -80,7 +80,7 @@
             <rect
               x="165"
               y="61"
-              width="438.77"
+              width="438.87"
               height="16"
               rx="4"
               fill="#b07219"
@@ -113,7 +113,7 @@
             <rect
               x="165"
               y="93"
-              width="9.49"
+              width="9.34"
               height="16"
               rx="4"
               fill="#3572A5"
@@ -131,7 +131,7 @@
               x="20"
               y="138"
               class="label">
-              Jupyter Notebook
+              TypeScript
             </text>
 
             <rect
@@ -146,10 +146,10 @@
             <rect
               x="165"
               y="125"
-              width="9.09"
+              width="9.34"
               height="16"
               rx="4"
-              fill="#DA5B0B"
+              fill="#3178c6"
             />
 
             <text
@@ -157,14 +157,14 @@
               y="138"
               text-anchor="end"
               class="percent">
-              1.9%
+              2.0%
             </text>
             
             <text
               x="20"
               y="170"
               class="label">
-              TypeScript
+              Jupyter Notebook
             </text>
 
             <rect
@@ -179,10 +179,10 @@
             <rect
               x="165"
               y="157"
-              width="9.09"
+              width="8.95"
               height="16"
               rx="4"
-              fill="#3178c6"
+              fill="#DA5B0B"
             />
 
             <text
@@ -212,7 +212,7 @@
             <rect
               x="165"
               y="189"
-              width="2.37"
+              width="2.33"
               height="16"
               rx="4"
               fill="#A97BFF"
