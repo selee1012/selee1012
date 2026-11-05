@@ -18,14 +18,13 @@ jobs:
     timeout-minutes: 60
 
     steps:
-      - name: Checkout profile repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Generate language stats
         env:
           GH_TOKEN: ${{ secrets.METRICS_TOKEN }}
           GITHUB_USERNAME: selee1012
-
         run: |
           python3 <<'PY'
           import base64
@@ -44,12 +43,11 @@ jobs:
 
           TOKEN = os.environ["GH_TOKEN"]
           USERNAME = os.environ["GITHUB_USERNAME"]
-
           OUTPUT_FILE = "language-stats.svg"
-          MAX_LANGUAGES = 0
-          MIN_PERCENT = 0.1
+          MIN_PERCENT = 1.0
 
-          # 언어별 확장자 및 색상
+          # 프로그래밍 언어만 포함
+          # SQL, Shell, HTML, CSS 등은 제외
           LANGUAGES = {
               ".java": ("Java", "#b07219"),
               ".kt": ("Kotlin", "#A97BFF"),
@@ -77,13 +75,8 @@ jobs:
               ".rb": ("Ruby", "#701516"),
               ".php": ("PHP", "#4F5D95"),
               ".scala": ("Scala", "#c22d40"),
-              ".sql": ("SQL", "#e38c00"),
-              ".sh": ("Shell", "#89e051"),
-              ".bash": ("Shell", "#89e051"),
-              ".r": ("R", "#198CE7"),
           }
 
-          # 통계에서 제외할 디렉터리
           IGNORED_DIRS = {
               "node_modules",
               ".gradle",
@@ -109,10 +102,7 @@ jobs:
               ):
                   return None
 
-              if path.lower().endswith((
-                  ".min.js",
-                  ".min.css",
-              )):
+              if path.lower().endswith(".min.js"):
                   return None
 
               extension = pathlib.PurePosixPath(
@@ -125,7 +115,7 @@ jobs:
               data = (
                   None
                   if payload is None
-                  else json.dumps(payload).encode()
+                  else json.dumps(payload).encode("utf-8")
               )
 
               request = urllib.request.Request(
@@ -152,15 +142,15 @@ jobs:
                   ) as response:
                       return json.load(response)
 
-              except urllib.error.HTTPError as exc:
-                  message = exc.read().decode(
+              except urllib.error.HTTPError as error:
+                  message = error.read().decode(
                       "utf-8",
                       errors="replace",
                   )
 
                   raise RuntimeError(
-                      f"GitHub API {exc.code}: {message}"
-                  ) from exc
+                      f"GitHub API {error.code}: {message}"
+                  ) from error
 
           def graphql(query, variables):
               result = api_request(
@@ -227,7 +217,7 @@ jobs:
               }
               """
 
-              result = graphql(
+              data = graphql(
                   query,
                   {
                       "login": USERNAME,
@@ -237,7 +227,7 @@ jobs:
               )
 
               return (
-                  result["user"]
+                  data["user"]
                   ["contributionsCollection"]
                   ["commitContributionsByRepository"]
               )
@@ -249,14 +239,13 @@ jobs:
               for year in sorted(contribution_years()):
                   start = f"{year}-01-01T00:00:00Z"
 
-                  if year == now.year:
-                      end = now.strftime(
+                  end = (
+                      now.strftime(
                           "%Y-%m-%dT%H:%M:%SZ"
                       )
-                  else:
-                      end = (
-                          f"{year}-12-31T23:59:59Z"
-                      )
+                      if year == now.year
+                      else f"{year}-12-31T23:59:59Z"
+                  )
 
                   try:
                       nodes = contributions_in_period(
@@ -265,25 +254,17 @@ jobs:
                       )
 
                   except RuntimeError:
-                      first_end = (
-                          f"{year}-06-30T23:59:59Z"
-                      )
-
                       nodes = contributions_in_period(
                           start,
-                          first_end,
+                          f"{year}-06-30T23:59:59Z",
                       )
 
                       if (
                           year < now.year
                           or now.month >= 7
                       ):
-                          second_start = (
-                              f"{year}-07-01T00:00:00Z"
-                          )
-
                           nodes += contributions_in_period(
-                              second_start,
+                              f"{year}-07-01T00:00:00Z",
                               end,
                           )
 
@@ -295,7 +276,7 @@ jobs:
               return sorted(names)
 
           def user_commit_shas(repo):
-              # 본인이 작성한 기본 브랜치 커밋 조회
+              # 기본 브랜치에서 본인이 작성한 커밋 조회
               shas = []
               page = 1
 
@@ -306,21 +287,19 @@ jobs:
                       "page": page,
                   })
 
-                  url = (
+                  rows = api_request(
                       f"https://api.github.com/repos/"
                       f"{repo}/commits?{params}"
                   )
 
-                  rows = api_request(url)
-
                   if not isinstance(rows, list):
                       raise RuntimeError(
-                          f"Unexpected API response: {repo}"
+                          f"Unexpected commits response for {repo}"
                       )
 
                   shas.extend(
-                      item["sha"]
-                      for item in rows
+                      row["sha"]
+                      for row in rows
                   )
 
                   if len(rows) < 100:
@@ -331,8 +310,6 @@ jobs:
               return list(dict.fromkeys(shas))
 
           def commit_changes(repo, shas, temp_root):
-              # REST API를 커밋마다 호출하지 않고
-              # Git으로 변경 라인 수를 분석
               local_dir = os.path.join(
                   temp_root,
                   "repository",
@@ -342,16 +319,18 @@ jobs:
                   f"x-access-token:{TOKEN}".encode()
               ).decode()
 
+              auth_header = (
+                  f"http.extraheader="
+                  f"AUTHORIZATION: basic {basic}"
+              )
+
               remote = f"https://github.com/{repo}.git"
 
-              clone = subprocess.run(
+              cloned = subprocess.run(
                   [
                       "git",
                       "-c",
-                      (
-                          "http.extraheader="
-                          f"AUTHORIZATION: basic {basic}"
-                      ),
+                      auth_header,
                       "clone",
                       "--quiet",
                       "--single-branch",
@@ -364,21 +343,19 @@ jobs:
                   text=True,
               )
 
-              if clone.returncode:
+              if cloned.returncode:
                   raise RuntimeError(
                       f"Failed to clone {repo}: "
-                      f"{clone.stderr.strip()}"
+                      f"{cloned.stderr.strip()}"
                   )
 
+              # 모든 커밋의 파일별 변경량 조회
               command = [
                   "git",
                   "-C",
                   local_dir,
                   "-c",
-                  (
-                      "http.extraheader="
-                      f"AUTHORIZATION: basic {basic}"
-                  ),
+                  auth_header,
                   "diff-tree",
                   "--stdin",
                   "--root",
@@ -402,8 +379,8 @@ jobs:
                   )
 
                   raise RuntimeError(
-                      f"Failed to calculate diffs "
-                      f"for {repo}: {error}"
+                      f"Failed to read changes for "
+                      f"{repo}: {error}"
                   )
 
               changes_by_commit = {}
@@ -436,15 +413,15 @@ jobs:
                   if current_sha is None:
                       continue
 
-                  parts = value.split("\t", 2)
+                  fields = value.split("\t", 2)
 
-                  if len(parts) != 3:
+                  if len(fields) != 3:
                       continue
 
-                  additions, deletions, path = parts
+                  additions, deletions, path = fields
 
-                  # Git rename 경로 처리
                   if not path:
+                      # 파일 이름 변경 처리
                       next(tokens, b"")
 
                       path = next(
@@ -467,29 +444,24 @@ jobs:
                   if detected is None:
                       continue
 
-                  name, _ = detected
-
-                  changed_lines = (
-                      int(additions) + int(deletions)
-                  )
+                  language, _ = detected
 
                   changes_by_commit[
                       current_sha
-                  ][name] += changed_lines
+                  ][language] += (
+                      int(additions) + int(deletions)
+                  )
 
               return changes_by_commit
 
-          def calculate_stats():
-              language_scores = (
-                  collections.defaultdict(float)
-              )
-
+          def collect_language_stats():
+              scores = collections.defaultdict(float)
               used_commits = 0
+
               repositories = find_repositories()
 
               print(
-                  f"Discovered {len(repositories)} "
-                  f"repositories",
+                  f"Found {len(repositories)} repositories",
                   flush=True,
               )
 
@@ -508,11 +480,11 @@ jobs:
                       flush=True,
                   )
 
-                  with tempfile.TemporaryDirectory() as folder:
+                  with tempfile.TemporaryDirectory() as directory:
                       changes_by_commit = commit_changes(
                           repo,
                           shas,
-                          folder,
+                          directory,
                       )
 
                   for sha in shas:
@@ -521,48 +493,45 @@ jobs:
                           {},
                       )
 
-                      total_changed_lines = sum(
+                      total_lines = sum(
                           changes.values()
                       )
 
-                      # 코드 변경이 없는 커밋 제외
-                      if total_changed_lines == 0:
+                      # 프로그래밍 코드 변경이 없는 커밋 제외
+                      if total_lines == 0:
                           continue
 
                       used_commits += 1
 
                       for language, lines in changes.items():
-                          # 커밋 1개를 언어별 비중으로 분배
-                          language_scores[language] += (
-                              lines / total_changed_lines
+                          # 커밋 1개를 변경량 비율로 분배
+                          scores[language] += (
+                              lines / total_lines
                           )
 
-              return language_scores, used_commits
+              return scores, used_commits
 
           def make_svg(scores, total):
+              # 1.0% 이상 언어만 표시
+              # 숨긴 언어도 전체 비율의 분모에는 포함
               items = sorted(
-                  scores.items(),
-                  key=lambda row: row[1],
+                  (
+                      (name, score)
+                      for name, score in scores.items()
+                      if total > 0
+                      and (
+                          score / total * 100
+                      ) >= MIN_PERCENT
+                  ),
+                  key=lambda pair: pair[1],
                   reverse=True,
               )
 
-              # 0.1% 이하 언어 표시 제외
-              items = [
-                  (name, score)
-                  for name, score in items
-                  if total
-                  and score / total * 100 > MIN_PERCENT
-              ]
-
-              if MAX_LANGUAGES > 0:
-                  items = items[:MAX_LANGUAGES]
-
               width = 760
-              row_height = 32
-
               height = (
-                  92
-                  + row_height * max(1, len(items))
+                  54
+                  + 32 * max(len(items), 1)
+                  + 35
               )
 
               colors = {
@@ -572,32 +541,29 @@ jobs:
 
               rows = []
 
-              for idx, (name, score) in enumerate(items):
-                  y = 60 + idx * row_height
+              for index, (language, score) in enumerate(items):
+                  y = 54 + 32 * index
 
-                  pct = score / total * 100
+                  percentage = (
+                      score / total * 100
+                  )
 
                   bar_width = max(
                       2,
-                      470 * pct / 100,
-                  )
-
-                  color = colors.get(
-                      name,
-                      "#8b949e",
+                      470 * percentage / 100,
                   )
 
                   rows.append(f'''
                     <text
                       x="20"
-                      y="{y + 13}"
+                      y="{y + 20}"
                       class="label">
-                      {html.escape(name)}
+                      {html.escape(language)}
                     </text>
 
                     <rect
                       x="165"
-                      y="{y}"
+                      y="{y + 7}"
                       width="470"
                       height="16"
                       rx="4"
@@ -606,29 +572,28 @@ jobs:
 
                     <rect
                       x="165"
-                      y="{y}"
+                      y="{y + 7}"
                       width="{bar_width:.2f}"
                       height="16"
                       rx="4"
-                      fill="{html.escape(color)}"
+                      fill="{html.escape(colors[language])}"
                     />
 
                     <text
                       x="735"
-                      y="{y + 13}"
+                      y="{y + 20}"
                       text-anchor="end"
                       class="percent">
-                      {pct:.1f}%
+                      {percentage:.1f}%
                     </text>
                   ''')
 
               if not items:
-                  rows = [
-                      '<text x="20" y="75" '
-                      'class="label">'
-                      'No code commits found.'
+                  rows.append(
+                      '<text x="20" y="75" class="label">'
+                      'No languages at or above 1%.'
                       '</text>'
-                  ]
+                  )
 
               return f'''
               <svg
@@ -641,32 +606,28 @@ jobs:
                   .title {{
                     font: 600 20px
                     -apple-system,BlinkMacSystemFont,
-                    "Segoe UI",Helvetica,Arial,
-                    sans-serif;
+                    "Segoe UI",Helvetica,Arial,sans-serif;
                     fill: #24292f;
                   }}
 
                   .label {{
                     font: 500 13px
                     -apple-system,BlinkMacSystemFont,
-                    "Segoe UI",Helvetica,Arial,
-                    sans-serif;
+                    "Segoe UI",Helvetica,Arial,sans-serif;
                     fill: #24292f;
                   }}
 
                   .percent {{
                     font: 500 13px
                     -apple-system,BlinkMacSystemFont,
-                    "Segoe UI",Helvetica,Arial,
-                    sans-serif;
+                    "Segoe UI",Helvetica,Arial,sans-serif;
                     fill: #57606a;
                   }}
 
                   .footer {{
                     font: 11px
                     -apple-system,BlinkMacSystemFont,
-                    "Segoe UI",Helvetica,Arial,
-                    sans-serif;
+                    "Segoe UI",Helvetica,Arial,sans-serif;
                     fill: #8c959f;
                   }}
 
@@ -674,16 +635,19 @@ jobs:
                     fill: #eaeef2;
                   }}
 
-                  @media (prefers-color-scheme:dark) {{
+                  @media (prefers-color-scheme: dark) {{
                     .title,.label {{
                       fill: #f0f6fc;
                     }}
+
                     .percent {{
                       fill: #c9d1d9;
                     }}
+
                     .footer {{
                       fill: #8b949e;
                     }}
+
                     .bar-bg {{
                       fill: #30363d;
                     }}
@@ -701,46 +665,46 @@ jobs:
 
                 <text
                   x="20"
-                  y="{height - 12}"
+                  y="{height - 10}"
                   class="footer">
-                  Based on personal commits ·
-                  Changes split by language ·
-                  HTML/CSS excluded
+                  Based on code-changing commits ·
+                  Programming languages ≥ 1%
                 </text>
+
               </svg>
               '''
 
-          scores, total_commits = calculate_stats()
+          scores, total_commits = collect_language_stats()
 
           print(
-              f"Code commits analyzed: {total_commits}"
+              f"Analyzed code commits: {total_commits}"
           )
 
-          for name, score in sorted(
+          for language, score in sorted(
               scores.items(),
-              key=lambda row: row[1],
+              key=lambda item: item[1],
               reverse=True,
           ):
-              if total_commits:
-                  percentage = (
-                      score / total_commits * 100
-                  )
+              percent = (
+                  score / total_commits * 100
+                  if total_commits
+                  else 0
+              )
 
-                  print(
-                      f"{name:18} "
-                      f"{percentage:6.2f}%"
-                  )
+              print(
+                  f"{language:18} {percent:6.2f}%"
+              )
 
           with open(
               OUTPUT_FILE,
               "w",
               encoding="utf-8",
-          ) as file:
-              file.write(
+          ) as output:
+              output.write(
                   make_svg(scores, total_commits)
               )
 
-          print(f"Created {OUTPUT_FILE}")
+          print(f"Generated: {OUTPUT_FILE}")
           PY
 
       - name: Commit generated SVG
