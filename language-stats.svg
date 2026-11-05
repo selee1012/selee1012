@@ -1,31 +1,40 @@
-<svg
+
+    <svg
       xmlns="http://www.w3.org/2000/svg"
       width="760"
-      height="281"
-      viewBox="0 0 760 281">
+      height="316"
+      viewBox="0 0 760 316">
 
       <style>
         .title {
-          font: 600 20px -apple-system,BlinkMacSystemFont,
-          "Segoe UI",Helvetica,Arial,sans-serif;
+          font: 600 20px
+          -apple-system,BlinkMacSystemFont,
+          "Segoe UI",Helvetica,Arial,
+          sans-serif;
           fill: #24292f;
         }
 
         .label {
-          font: 500 13px -apple-system,BlinkMacSystemFont,
-          "Segoe UI",Helvetica,Arial,sans-serif;
+          font: 500 13px
+          -apple-system,BlinkMacSystemFont,
+          "Segoe UI",Helvetica,Arial,
+          sans-serif;
           fill: #24292f;
         }
 
         .percent {
-          font: 500 13px -apple-system,BlinkMacSystemFont,
-          "Segoe UI",Helvetica,Arial,sans-serif;
+          font: 500 13px
+          -apple-system,BlinkMacSystemFont,
+          "Segoe UI",Helvetica,Arial,
+          sans-serif;
           fill: #57606a;
         }
 
         .footer {
-          font: 11px -apple-system,BlinkMacSystemFont,
-          "Segoe UI",Helvetica,Arial,sans-serif;
+          font: 11px
+          -apple-system,BlinkMacSystemFont,
+          "Segoe UI",Helvetica,Arial,
+          sans-serif;
           fill: #8c959f;
         }
 
@@ -33,20 +42,16 @@
           fill: #eaeef2;
         }
 
-        @media (prefers-color-scheme: dark) {
-          .title,
-          .label {
+        @media (prefers-color-scheme:dark) {
+          .title,.label {
             fill: #f0f6fc;
           }
-
           .percent {
             fill: #c9d1d9;
           }
-
           .footer {
             fill: #8b949e;
           }
-
           .bar-bg {
             fill: #30363d;
           }
@@ -61,211 +66,245 @@
       </text>
 
       
-            <text
-              x="20"
-              y="74"
-              class="label">
-              Java
-            </text>
+          <text
+            x="20"
+            y="73"
+            class="label">
+            Java
+          </text>
 
-            <rect
-              x="165"
-              y="61"
-              width="470"
-              height="16"
-              rx="4"
-              class="bar-bg"
-            />
+          <rect
+            x="165"
+            y="60"
+            width="470"
+            height="16"
+            rx="4"
+            class="bar-bg"
+          />
 
-            <rect
-              x="165"
-              y="61"
-              width="438.95"
-              height="16"
-              rx="4"
-              fill="#b07219"
-            />
+          <rect
+            x="165"
+            y="60"
+            width="400.62"
+            height="16"
+            rx="4"
+            fill="#b07219"
+          />
 
-            <text
-              x="735"
-              y="74"
-              text-anchor="end"
-              class="percent">
-              93.4%
-            </text>
-            
-            <text
-              x="20"
-              y="106"
-              class="label">
-              Python
-            </text>
+          <text
+            x="735"
+            y="73"
+            text-anchor="end"
+            class="percent">
+            85.2%
+          </text>
+        
+          <text
+            x="20"
+            y="105"
+            class="label">
+            Python
+          </text>
 
-            <rect
-              x="165"
-              y="93"
-              width="470"
-              height="16"
-              rx="4"
-              class="bar-bg"
-            />
+          <rect
+            x="165"
+            y="92"
+            width="470"
+            height="16"
+            rx="4"
+            class="bar-bg"
+          />
 
-            <rect
-              x="165"
-              y="93"
-              width="9.31"
-              height="16"
-              rx="4"
-              fill="#3572A5"
-            />
+          <rect
+            x="165"
+            y="92"
+            width="26.12"
+            height="16"
+            rx="4"
+            fill="#3572A5"
+          />
 
-            <text
-              x="735"
-              y="106"
-              text-anchor="end"
-              class="percent">
-              2.0%
-            </text>
-            
-            <text
-              x="20"
-              y="138"
-              class="label">
-              TypeScript
-            </text>
+          <text
+            x="735"
+            y="105"
+            text-anchor="end"
+            class="percent">
+            5.6%
+          </text>
+        
+          <text
+            x="20"
+            y="137"
+            class="label">
+            SQL
+          </text>
 
-            <rect
-              x="165"
-              y="125"
-              width="470"
-              height="16"
-              rx="4"
-              class="bar-bg"
-            />
+          <rect
+            x="165"
+            y="124"
+            width="470"
+            height="16"
+            rx="4"
+            class="bar-bg"
+          />
 
-            <rect
-              x="165"
-              y="125"
-              width="9.31"
-              height="16"
-              rx="4"
-              fill="#3178c6"
-            />
+          <rect
+            x="165"
+            y="124"
+            width="19.12"
+            height="16"
+            rx="4"
+            fill="#e38c00"
+          />
 
-            <text
-              x="735"
-              y="138"
-              text-anchor="end"
-              class="percent">
-              2.0%
-            </text>
-            
-            <text
-              x="20"
-              y="170"
-              class="label">
-              Jupyter Notebook
-            </text>
+          <text
+            x="735"
+            y="137"
+            text-anchor="end"
+            class="percent">
+            4.1%
+          </text>
+        
+          <text
+            x="20"
+            y="169"
+            class="label">
+            TypeScript
+          </text>
 
-            <rect
-              x="165"
-              y="157"
-              width="470"
-              height="16"
-              rx="4"
-              class="bar-bg"
-            />
+          <rect
+            x="165"
+            y="156"
+            width="470"
+            height="16"
+            rx="4"
+            class="bar-bg"
+          />
 
-            <rect
-              x="165"
-              y="157"
-              width="8.93"
-              height="16"
-              rx="4"
-              fill="#DA5B0B"
-            />
+          <rect
+            x="165"
+            y="156"
+            width="11.28"
+            height="16"
+            rx="4"
+            fill="#3178c6"
+          />
 
-            <text
-              x="735"
-              y="170"
-              text-anchor="end"
-              class="percent">
-              1.9%
-            </text>
-            
-            <text
-              x="20"
-              y="202"
-              class="label">
-              Kotlin
-            </text>
+          <text
+            x="735"
+            y="169"
+            text-anchor="end"
+            class="percent">
+            2.4%
+          </text>
+        
+          <text
+            x="20"
+            y="201"
+            class="label">
+            Kotlin
+          </text>
 
-            <rect
-              x="165"
-              y="189"
-              width="470"
-              height="16"
-              rx="4"
-              class="bar-bg"
-            />
+          <rect
+            x="165"
+            y="188"
+            width="470"
+            height="16"
+            rx="4"
+            class="bar-bg"
+          />
 
-            <rect
-              x="165"
-              y="189"
-              width="2.33"
-              height="16"
-              rx="4"
-              fill="#A97BFF"
-            />
+          <rect
+            x="165"
+            y="188"
+            width="6.27"
+            height="16"
+            rx="4"
+            fill="#A97BFF"
+          />
 
-            <text
-              x="735"
-              y="202"
-              text-anchor="end"
-              class="percent">
-              0.5%
-            </text>
-            
-            <text
-              x="20"
-              y="234"
-              class="label">
-              JavaScript
-            </text>
+          <text
+            x="735"
+            y="201"
+            text-anchor="end"
+            class="percent">
+            1.3%
+          </text>
+        
+          <text
+            x="20"
+            y="233"
+            class="label">
+            JavaScript
+          </text>
 
-            <rect
-              x="165"
-              y="221"
-              width="470"
-              height="16"
-              rx="4"
-              class="bar-bg"
-            />
+          <rect
+            x="165"
+            y="220"
+            width="470"
+            height="16"
+            rx="4"
+            class="bar-bg"
+          />
 
-            <rect
-              x="165"
-              y="221"
-              width="2.00"
-              height="16"
-              rx="4"
-              fill="#f1e05a"
-            />
+          <rect
+            x="165"
+            y="220"
+            width="4.54"
+            height="16"
+            rx="4"
+            fill="#f1e05a"
+          />
 
-            <text
-              x="735"
-              y="234"
-              text-anchor="end"
-              class="percent">
-              0.2%
-            </text>
-            
+          <text
+            x="735"
+            y="233"
+            text-anchor="end"
+            class="percent">
+            1.0%
+          </text>
+        
+          <text
+            x="20"
+            y="265"
+            class="label">
+            Shell
+          </text>
+
+          <rect
+            x="165"
+            y="252"
+            width="470"
+            height="16"
+            rx="4"
+            class="bar-bg"
+          />
+
+          <rect
+            x="165"
+            y="252"
+            width="2.06"
+            height="16"
+            rx="4"
+            fill="#89e051"
+          />
+
+          <text
+            x="735"
+            y="265"
+            text-anchor="end"
+            class="percent">
+            0.4%
+          </text>
+        
 
       <text
         x="20"
-        y="271"
+        y="304"
         class="footer">
-        Based on GitHub commit contributions · HTML/CSS excluded
+        Based on personal commits ·
+        Changes split by language ·
+        HTML/CSS excluded
       </text>
-
     </svg>
     
