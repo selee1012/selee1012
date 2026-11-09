@@ -84,7 +84,7 @@
           <rect
             x="165"
             y="61"
-            width="416.08"
+            width="414.96"
             height="16"
             rx="4"
             fill="#b07219"
@@ -95,7 +95,7 @@
             y="74"
             text-anchor="end"
             class="percent">
-            88.5%
+            88.3%
           </text>
         
           <text
@@ -117,7 +117,7 @@
           <rect
             x="165"
             y="93"
-            width="26.54"
+            width="26.46"
             height="16"
             rx="4"
             fill="#3572A5"
@@ -135,7 +135,7 @@
             x="20"
             y="138"
             class="label">
-            TypeScript
+            Kotlin
           </text>
 
           <rect
@@ -150,10 +150,10 @@
           <rect
             x="165"
             y="125"
-            width="11.40"
+            width="12.63"
             height="16"
             rx="4"
-            fill="#3178c6"
+            fill="#A97BFF"
           />
 
           <text
@@ -161,14 +161,14 @@
             y="138"
             text-anchor="end"
             class="percent">
-            2.4%
+            2.7%
           </text>
         
           <text
             x="20"
             y="170"
             class="label">
-            Kotlin
+            TypeScript
           </text>
 
           <rect
@@ -183,10 +183,10 @@
           <rect
             x="165"
             y="157"
-            width="11.40"
+            width="11.37"
             height="16"
             rx="4"
-            fill="#A97BFF"
+            fill="#3178c6"
           />
 
           <text
