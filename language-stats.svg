@@ -84,7 +84,7 @@
           <rect
             x="165"
             y="61"
-            width="321.08"
+            width="320.76"
             height="16"
             rx="4"
             fill="#b07219"
@@ -95,7 +95,7 @@
             y="74"
             text-anchor="end"
             class="percent">
-            68.3%
+            68.2%
           </text>
         
           <text
@@ -117,7 +117,7 @@
           <rect
             x="165"
             y="93"
-            width="95.52"
+            width="95.90"
             height="16"
             rx="4"
             fill="#3572A5"
@@ -128,7 +128,7 @@
             y="106"
             text-anchor="end"
             class="percent">
-            20.3%
+            20.4%
           </text>
         
           <text
@@ -150,7 +150,7 @@
           <rect
             x="165"
             y="125"
-            width="28.66"
+            width="28.63"
             height="16"
             rx="4"
             fill="#3178c6"
@@ -183,7 +183,7 @@
           <rect
             x="165"
             y="157"
-            width="20.95"
+            width="20.93"
             height="16"
             rx="4"
             fill="#A97BFF"
